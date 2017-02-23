@@ -4504,7 +4504,7 @@ class TestStrings(TestCase):
             metavar='METAVAR')
         string = (
             "Action(option_strings=['--foo', '-a', '-b'], dest='b', "
-            "nargs='+', const=None, default=42, type='int', "
+            "nargs='+', const=None, default=42, type='int', colltype=<class 'list'>, "
             "choices=[1, 2, 3], help='HELP', metavar='METAVAR')")
         self.assertStringEqual(option, string)
 
@@ -4520,7 +4520,7 @@ class TestStrings(TestCase):
             metavar='MV MV MV')
         string = (
             "Action(option_strings=[], dest='x', nargs='?', "
-            "const=None, default=2.5, type=%r, choices=[0.5, 1.5, 2.5], "
+            "const=None, default=2.5, type=%r, colltype=<class 'list'>, choices=[0.5, 1.5, 2.5], "
             "help='H HH H', metavar='MV MV MV')" % float)
         self.assertStringEqual(argument, string)
 
