@@ -909,6 +909,8 @@ values are:
      >>> print(parser.parse_args('--foo B cmd --arg1 XX ZZ'.split()))
      Namespace(args=['--arg1', 'XX', 'ZZ'], command='cmd', foo='B')
 
+If you want to customize handling of multiple value arguments, see colltype_.
+
 If the ``nargs`` keyword argument is not provided, the number of arguments consumed
 is determined by the action_.  Generally this means a single command-line argument
 will be consumed and a single item (not a list) will be produced.
@@ -1047,6 +1049,18 @@ simply check against a range of values::
    PROG: error: argument foo: invalid choice: 11 (choose from 5, 6, 7, 8, 9)
 
 See the choices_ section for more details.
+
+colltype
+^^^^^^^^
+
+When the nargs_ keyword argument is ``*``, ``+``, or an integer value, the argument values
+will be passed as a list, after type conversion, to the callable specified by this keyword
+argument.  The default is ``list``.  For example::
+
+   >>> parser = argparse.ArgumentParser(prog='dedup.py')
+   >>> parser.add_argument('foo', type=int, colltype=set)
+   >>> parser.parse_args(['1','1','2','2','3','3','3'])
+   Namespace(foo={1,2,3})
 
 
 choices

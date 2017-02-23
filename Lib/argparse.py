@@ -753,13 +753,13 @@ class Action(_AttributeHolder):
         - nargs -- The number of command-line arguments that should be
             consumed. By default, one argument will be consumed and a single
             value will be produced.  Other values include:
-                - N (an integer) consumes N arguments (and produces a list)
+                - N (an integer) consumes N arguments (and produces a collection, by default a list)
                 - '?' consumes zero or one arguments
-                - '*' consumes zero or more arguments (and produces a list)
-                - '+' consumes one or more arguments (and produces a list)
+                - '*' consumes zero or more arguments (and produces a collection, by default a list)
+                - '+' consumes one or more arguments (and produces a collection, by default a list)
             Note that the difference between the default and nargs=1 is that
             with the default, a single value will be produced, while with
-            nargs=1, a list containing a single value will be produced.
+            nargs=1, a collection containing a single value will be produced.
 
         - const -- The value to be produced if the option is specified and the
             option uses an action that takes no values.
@@ -770,6 +770,10 @@ class Action(_AttributeHolder):
             returns the converted value.  The standard Python types str, int,
             float, and complex are useful examples of such callables.  If None,
             str is used.
+
+        - colltype -- A callable that accepts a list of converted values, and
+            returns a collection based on them.  Used to allow customization of
+            the collection returned when nargs is 'N', '*', or '+'.
 
         - choices -- A container of values that should be allowed. If not None,
             after a command-line argument has been converted to the appropriate
@@ -793,6 +797,7 @@ class Action(_AttributeHolder):
                  const=None,
                  default=None,
                  type=None,
+                 colltype=list,
                  choices=None,
                  required=False,
                  help=None,
@@ -803,6 +808,7 @@ class Action(_AttributeHolder):
         self.const = const
         self.default = default
         self.type = type
+        self.colltype = colltype
         self.choices = choices
         self.required = required
         self.help = help
@@ -816,6 +822,7 @@ class Action(_AttributeHolder):
             'const',
             'default',
             'type',
+            'colltype',
             'choices',
             'help',
             'metavar',
@@ -835,6 +842,7 @@ class _StoreAction(Action):
                  const=None,
                  default=None,
                  type=None,
+                 colltype=list,
                  choices=None,
                  required=False,
                  help=None,
@@ -852,6 +860,7 @@ class _StoreAction(Action):
             const=const,
             default=default,
             type=type,
+            colltype=colltype,
             choices=choices,
             required=required,
             help=help,
@@ -927,6 +936,7 @@ class _AppendAction(Action):
                  const=None,
                  default=None,
                  type=None,
+                 colltype=list,
                  choices=None,
                  required=False,
                  help=None,
@@ -944,6 +954,7 @@ class _AppendAction(Action):
             const=const,
             default=default,
             type=type,
+            colltype=colltype,
             choices=choices,
             required=required,
             help=help,
@@ -1337,6 +1348,10 @@ class _ActionsContainer(object):
         type_func = self._registry_get('type', action.type, action.type)
         if not callable(type_func):
             raise ValueError('%r is not callable' % (type_func,))
+
+        # raise an error if the action colltype is not callable
+        if not callable(action.colltype):
+            raise ValueError('%r is not callable' % (action.colltype,))
 
         # raise an error if the metavar does not match the type
         if hasattr(self, "_get_formatter"):
@@ -2263,7 +2278,7 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
 
         # REMAINDER arguments convert all values, checking none
         elif action.nargs == REMAINDER:
-            value = [self._get_value(action, v) for v in arg_strings]
+            value = action.colltype([self._get_value(action, v) for v in arg_strings])
 
         # PARSER arguments convert all values, but check only the first
         elif action.nargs == PARSER:
@@ -2272,7 +2287,7 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
 
         # all other types of nargs produce a list
         else:
-            value = [self._get_value(action, v) for v in arg_strings]
+            value = action.colltype([self._get_value(action, v) for v in arg_strings])
             for v in value:
                 self._check_value(action, v)
 
