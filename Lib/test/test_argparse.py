@@ -4763,6 +4763,41 @@ class TestTypeFunctionCalledOnDefault(TestCase):
         self.assertEqual(args.test, [])
 
 # ======================
+# Test colltype wrapping
+# ======================
+class TestColltype(TestCase):
+    def test_colltype_plus(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('foo', nargs='+', type=int, colltype=set)
+        args = parser.parse_args(('1', '1', '2', '2', '3', '3',))
+        self.assertEqual(args.foo, {1,2,3})
+
+    def test_colltype_star(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('foo', nargs='*', type=int, colltype=set)
+        args = parser.parse_args(('1', '1', '2', '2', '3', '3',))
+        self.assertEqual(args.foo, {1,2,3})
+
+    def test_colltype_n(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('foo', nargs=6, type=int, colltype=set)
+        args = parser.parse_args(('1', '1', '2', '2', '3', '3',))
+        self.assertEqual(args.foo, {1,2,3})
+
+    def test_colltype_append(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--foo', nargs='*', action='append', type=int, colltype=set)
+        args = parser.parse_args(('--foo', '1', '1', '2', '2', '--foo', '2', '2', '3', '3',))
+        self.assertEqual(args.foo, [{1,2}, {2,3}])
+
+    def test_colltype_remainder(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('foo', nargs=argparse.REMAINDER, type=int, colltype=set)
+        args = parser.parse_args(('1', '1', '2', '2', '3', '3',))
+        self.assertEqual(args.foo, {1,2,3})
+
+
+# ======================
 # parse_known_args tests
 # ======================
 
